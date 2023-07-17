@@ -118,23 +118,20 @@ const updateUser = async (req, res) => {
                 return res.status(500).json({ message: err.message });
             }
 
-            const { id } = req.params; // ID del usuario que quiere modificar
+            const { id } = req.params; 
             const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : null; // Utilizar null en lugar de una cadena vacía si no hay archivo
+            const filename = req.file ? req.file.filename : null; 
 
             const user = await Users.findById(id);
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            // Verificar si el usuario es admin o superadmin
             if (user.role === 'admin') {
-                // Si es admin, no puede modificar a sí mismo ni a otros admins
                 if (user._id.toString() === id || user.role === 'admin') {
                     return res.status(403).json({ message: 'Unauthorized' });
                 }
             } else if (user.role === 'superadmin') {
-                // Si es superadmin, no puede modificar a sí mismo
                 if (user._id.toString() === id) {
                     return res.status(403).json({ message: 'Unauthorized' });
                 }
@@ -148,7 +145,6 @@ const updateUser = async (req, res) => {
             user.image = filename || user.image;
 
             try {
-                // Validar el modelo Users antes de guardarlo en la base de datos
                 await user.validate();
             } catch (error) {
                 const errorMessages = Object.values(error.errors).map(err => err.message);
