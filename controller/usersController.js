@@ -18,6 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).single('image');
 
+
 const registerUser = async (req, res) => {
     try {
         upload(req, res, async (err) => {
@@ -30,7 +31,7 @@ const registerUser = async (req, res) => {
             }
 
             const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : '';
+            const filename = req.file ? req.file.filename : null; // Utilizar null en lugar de una cadena vacía si no hay archivo
 
             const existingUser = await Users.findOne({ email });
             if (existingUser) {
@@ -43,23 +44,35 @@ const registerUser = async (req, res) => {
                 email,
                 password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
                 role: 'user',
-                image: filename,
+                image: filename, // Utilizar el valor de filename directamente
                 address,
                 phone,
                 registerDate: Date.now(),
                 lastLogin: Date.now()
             });
 
-            const savedUser = await newUser.save();
-            const token = jwt.sign({ userId: savedUser._id }, 'secretKey', { expiresIn: '1h' });
-            return res.status(200).json({ user: savedUser, token });
+            try {
+                // Validar el modelo Users antes de guardarlo en la base de datos
+                await newUser.validate();
+            } catch (error) {
+                const errorMessages = Object.values(error.errors).map(err => err.message);
+                return res.status(400).json({ errors: errorMessages });
+            }
+
+            try {
+                const savedUser = await newUser.save();
+                const token = jwt.sign({ userId: savedUser._id }, 'secretKey', { expiresIn: '1h' });
+                return res.status(200).json({ user: savedUser, token });
+            } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
         });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-
 
 const loginUser = async (req, res) => {
     try {
@@ -95,4 +108,4 @@ const hello = async (req, res) => {
 };
 
 
-module.exports = { registerUser, loginUser, hello};
+module.exports = { registerUser, loginUser, hello };
