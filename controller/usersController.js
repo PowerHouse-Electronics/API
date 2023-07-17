@@ -63,27 +63,27 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-      const { email, password } = req.body;
-      const user = await Users.findOne({ email });
-      if (!user) {
-        return res.status(400).json({ message: 'Invalid email or password' });
-      }
-  
-      const isPasswordValid = bcrypt.compareSync(password, user.password);
-      if (!isPasswordValid) {
-        return res.status(400).json({ message: 'Invalid email or password' });
-      }
-      const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
-  
-      user.lastLogin = Date.now();
-      await user.save();
-  
-      return res.status(200).json({ message: 'Login successful', user });
+        const { email, password } = req.body;
+        const user = await Users.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+
+        const isPasswordValid = bcrypt.compareSync(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
+
+        user.lastLogin = Date.now();
+        await user.save();
+        console.log(user);
+        return res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Internal server error' });
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
-  };
-  
+};
+
 
 module.exports = { registerUser, loginUser };
