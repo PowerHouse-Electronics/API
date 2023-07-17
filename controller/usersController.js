@@ -91,8 +91,7 @@ const loginUser = async (req, res) => {
         user.lastLogin = Date.now();
         await user.save();
         console.log(user);
-        user.token = token;
-        return res.status(200).json({ message: 'Login successful', user });
+        return res.status(200).json({ message: 'Login successful', user, token });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
