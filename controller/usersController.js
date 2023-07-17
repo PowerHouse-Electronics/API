@@ -91,7 +91,7 @@ const loginUser = async (req, res) => {
         user.lastLogin = Date.now();
         await user.save();
         console.log(user);
-        return res.status(200).json({ message: 'Login successful', user });
+        return res.status(200).json({ message: 'Login successful', user, token });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
@@ -107,5 +107,68 @@ const hello = async (req, res) => {
     }
 };
 
+const updateUser = async (req, res) => {
+    try {
+        upload(req, res, async (err) => {
+            if (err instanceof multer.MulterError) {
+                console.log(err);
+                return res.status(500).json({ message: err.message });
+            } else if (err) {
+                console.log(err);
+                return res.status(500).json({ message: err.message });
+            }
 
-module.exports = { registerUser, loginUser, hello };
+            const { id } = req.params; // ID del usuario que quiere modificar
+            const { name, email, password, address, phone } = req.body;
+            const filename = req.file ? req.file.filename : null; // Utilizar null en lugar de una cadena vacía si no hay archivo
+
+            const user = await Users.findById(id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Verificar si el usuario es admin o superadmin
+            if (user.role === 'admin') {
+                // Si es admin, no puede modificar a sí mismo ni a otros admins
+                if (user._id.toString() === id || user.role === 'admin') {
+                    return res.status(403).json({ message: 'Unauthorized' });
+                }
+            } else if (user.role === 'superadmin') {
+                // Si es superadmin, no puede modificar a sí mismo
+                if (user._id.toString() === id) {
+                    return res.status(403).json({ message: 'Unauthorized' });
+                }
+            }
+
+            user.name = name || user.name;
+            user.email = email || user.email;
+            user.password = password ? bcrypt.hashSync(password, bcrypt.genSaltSync(10)) : user.password;
+            user.address = address || user.address;
+            user.phone = phone || user.phone;
+            user.image = filename || user.image;
+
+            try {
+                // Validar el modelo Users antes de guardarlo en la base de datos
+                await user.validate();
+            } catch (error) {
+                const errorMessages = Object.values(error.errors).map(err => err.message);
+                return res.status(400).json({ errors: errorMessages });
+            }
+
+            try {
+                const updatedUser = await user.save();
+                return res.status(200).json({ user: updatedUser });
+            } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+
+module.exports = { registerUser, loginUser, hello, updateUser };
