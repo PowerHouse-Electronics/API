@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt-nodejs');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -31,11 +33,19 @@ const registerUser = async (req, res) => {
             }
 
             const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : null; // Utilizar null en lugar de una cadena vacía si no hay archivo
+            const filename = req.file ? req.file.filename : null;
 
             const existingUser = await Users.findOne({ email });
             if (existingUser) {
                 console.log(existingUser);
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
                 return res.status(400).json({ message: 'User already exists' });
             }
 
@@ -44,7 +54,7 @@ const registerUser = async (req, res) => {
                 email,
                 password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
                 role: 'user',
-                image: filename, // Utilizar el valor de filename directamente
+                image: filename,
                 address,
                 phone,
                 registerDate: Date.now(),
@@ -74,29 +84,37 @@ const registerUser = async (req, res) => {
     }
 };
 
+
 const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await Users.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-
-        const isPasswordValid = bcrypt.compareSync(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(400).json({ message: 'Invalid email or password' });
-        }
-        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
-
-        user.lastLogin = Date.now();
-        await user.save();
-        console.log(user);
-        return res.status(200).json({ message: 'Login successful', user, token });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
+  try {
+    const { email, password } = req.body;
+    const user = await Users.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
+
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
+
+    user.lastLogin = Date.now();
+    await user.save();
+
+    // Agrega la ruta base a la propiedad 'image'
+    const imageBaseUrl = req.protocol + '://' + req.get('host');
+    const imageUrl = `${imageBaseUrl}/src/${user.image}`; // Ajusta esto según la estructura de tu modelo User
+
+    console.log(user);
+    return res.status(200).json({ message: 'Login successful', user: { ...user.toObject(), image: imageUrl }, token });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
 };
+
 
 const hello = async (req, res) => {
     try {
@@ -118,9 +136,9 @@ const updateUser = async (req, res) => {
                 return res.status(500).json({ message: err.message });
             }
 
-            const { id } = req.params; 
+            const { id } = req.params;
             const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : null; 
+            const filename = req.file ? req.file.filename : null;
 
             const user = await Users.findById(id);
             if (!user) {
