@@ -105,7 +105,7 @@ const loginUser = async (req, res) => {
 
     // Agrega la ruta base a la propiedad 'image'
     const imageBaseUrl = req.protocol + '://' + req.get('host');
-    const imageUrl = `${imageBaseUrl}/src/${user.image}`; // Ajusta esto según la estructura de tu modelo User
+    const imageUrl = `${imageBaseUrl}/${user.image}`; // Ajusta esto según la estructura de tu modelo User
 
     console.log(user);
     return res.status(200).json({ message: 'Login successful', user: { ...user.toObject(), image: imageUrl }, token });
