@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt-nodejs');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -31,11 +33,19 @@ const registerUser = async (req, res) => {
             }
 
             const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : null; // Utilizar null en lugar de una cadena vacía si no hay archivo
+            const filename = req.file ? req.file.filename : null;
 
             const existingUser = await Users.findOne({ email });
             if (existingUser) {
                 console.log(existingUser);
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
                 return res.status(400).json({ message: 'User already exists' });
             }
 
@@ -44,7 +54,7 @@ const registerUser = async (req, res) => {
                 email,
                 password: bcrypt.hashSync(password, bcrypt.genSaltSync(10)),
                 role: 'user',
-                image: filename, // Utilizar el valor de filename directamente
+                image: filename,
                 address,
                 phone,
                 registerDate: Date.now(),
@@ -74,6 +84,7 @@ const registerUser = async (req, res) => {
     }
 };
 
+
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -86,26 +97,24 @@ const loginUser = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
+
         const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
 
         user.lastLogin = Date.now();
         await user.save();
+
+        // Agrega la ruta base a la propiedad 'image'
+        const imageBaseUrl = req.protocol + '://' + req.get('host');
+        const imageUrl = `${imageBaseUrl}/${user.image}`; // Ajusta esto según la estructura de tu modelo User
+
         console.log(user);
-        return res.status(200).json({ message: 'Login successful', user, token });
+        return res.status(200).json({ message: 'Login successful', user: { ...user.toObject(), image: imageUrl }, token });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
 
-const hello = async (req, res) => {
-    try {
-        return res.status(200).json({ message: 'Hello' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
 
 const updateUser = async (req, res) => {
     try {
@@ -118,24 +127,48 @@ const updateUser = async (req, res) => {
                 return res.status(500).json({ message: err.message });
             }
 
-            const { id } = req.params; 
-            const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : null; 
+            const { id } = req.params;
+            const { name, email, password, address, phone, modifierId } = req.body;
+            const filename = req.file ? req.file.filename : null;
+
+            if (!modifierId) {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                return res.status(400).json({ message: 'Missing modifierId' });
+            }
 
             const user = await Users.findById(id);
             if (!user) {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
                 return res.status(404).json({ message: 'User not found' });
             }
-
-            if (user.role === 'admin') {
-                if (user._id.toString() === id || user.role === 'admin') {
-                    return res.status(403).json({ message: 'Unauthorized' });
+            const modifier = await Users.findById(modifierId);
+            if (!modifier) {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
                 }
-            } else if (user.role === 'superadmin') {
-                if (user._id.toString() === id) {
-                    return res.status(403).json({ message: 'Unauthorized' });
-                }
+                return res.status(404).json({ message: 'Modifier not found' });
             }
+            console.log(user);
+            console.log(modifier);
 
             user.name = name || user.name;
             user.email = email || user.email;
@@ -165,6 +198,25 @@ const updateUser = async (req, res) => {
     }
 };
 
+const getUsers = async (req, res) => {
+    const {secret } = req.params;
 
+    try {
+        if (secret !== 'admin') {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        if (secret === 'admin') {
+            const users = await Users.find();
+            console.log(users);
+            if (!users) {
+                return res.status(404).json({ message: 'Users not found' });
+            }
+            return res.status(200).json({ users });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
-module.exports = { registerUser, loginUser, hello, updateUser };
+module.exports = { registerUser, loginUser, getUsers, updateUser };
