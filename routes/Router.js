@@ -4,6 +4,7 @@ const usersController = require('../controller/usersController');
 const cellController = require('../controller/cellController');
 const cpuController = require('../controller/cpuController');
 const gconsoController = require('../controller/gconsController');
+const orderController = require('../controller/orderController');
 
 
 //Ruta usuiarios 
@@ -29,6 +30,12 @@ router.get('/gameconsoles', gconsoController.getAllGameConsoles);
 router.post('/gameconsoles', gconsoController.addGameConsole);
 router.put('/gameconsoles/:id', gconsoController.updateGameConsole); 
 router.delete('/gameconsoles/:id', gconsoController.deleteGameConsole);
+
+//Rutas ordenes 
+/*router.post('/orders', orderController.createOrder);
+router.get('/orders', orderController.getAllOrders);
+router.put('/orders/:id', orderController.updateOrderStatus);
+router.delete('/orders/:id', orderController.deleteOrder); */
 
 
 module.exports = router;
