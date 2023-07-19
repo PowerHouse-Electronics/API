@@ -3,7 +3,7 @@ const {Schema, model} = require('mongoose');
 
 const cellphoneSchema = new Schema({
   brand: {
-    type: String,
+    type: String, 
     required: true
   },
   model: {

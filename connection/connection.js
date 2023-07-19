@@ -9,4 +9,4 @@ const connectDB = async() => {
         throw new Error('Error a la hora de iniciar la BD ver logs');
     }
 }
-module.exports = connectDB
+module.exports = connectDB  
