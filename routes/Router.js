@@ -3,6 +3,7 @@ const router = express.Router();
 const usersController = require('../controller/usersController');
 const cellController = require('../controller/cellController');
 const cpuController = require('../controller/cpuController');
+const gconsoController = require('../controller/gconsController');
 
 
 //Ruta usuiarios 
@@ -22,6 +23,12 @@ router.get('/cpus', cpuController.getAllCPUs);
 router.post('/cpus', cpuController.addCPU);
 router.put('/cpus/:id', cpuController.updateCPU);
 router.delete('/cpus/:id', cpuController.deleteCPU);
+
+//Rutas Consola de videojuegos
+router.get('/gameconsoles', gconsoController.getAllGameConsoles);
+router.post('/gameconsoles', gconsoController.addGameConsole);
+router.put('/gameconsoles/:id', gconsoController.updateGameConsole); 
+router.delete('/gameconsoles/:id', gconsoController.deleteGameConsole);
 
 
 module.exports = router;
