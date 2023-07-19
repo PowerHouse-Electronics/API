@@ -170,6 +170,55 @@ const updateUser = async (req, res) => {
             console.log(user);
             console.log(modifier);
 
+            if (user._id.toString() !== modifier._id.toString()) {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+
+            if (user.role === 'admin' && modifier.role !== 'admin') {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+
+            if (user.role === 'admin' && modifier.role !== 'superadmin') {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+
+            if (user.role === 'superadmin' && modifier.role !== 'superadmin') {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                return res.status(403).json({ message: 'Forbidden' });
+            }
+
+            
             user.name = name || user.name;
             user.email = email || user.email;
             user.password = password ? bcrypt.hashSync(password, bcrypt.genSaltSync(10)) : user.password;
@@ -211,8 +260,13 @@ const getUsers = async (req, res) => {
             if (!users) {
                 return res.status(404).json({ message: 'Users not found' });
             }
+            const imageBaseUrl = req.protocol + '://' + req.get('host');
+            users.forEach(user => {
+                user.image = `${imageBaseUrl}/${user.image}`;
+            });
             return res.status(200).json({ users });
-        }
+                       
+        } 
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
