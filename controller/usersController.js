@@ -199,14 +199,24 @@ const updateUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
+    const {secret } = req.params;
+
     try {
-        const users = await Users.find();
-        return res.status(200).json({ users });
+        if (secret !== 'admin') {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        if (secret === 'admin') {
+            const users = await Users.find();
+            console.log(users);
+            if (!users) {
+                return res.status(404).json({ message: 'Users not found' });
+            }
+            return res.status(200).json({ users });
+        }
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
     }
-};
+}
 
-
-module.exports = { registerUser, loginUser, hello, updateUser };
+module.exports = { registerUser, loginUser, getUsers, updateUser };
