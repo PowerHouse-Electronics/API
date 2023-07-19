@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const usersController = require('../controller/usersController');
 const cellController = require('../controller/cellController');
+const cpuController = require('../controller/cpuController');
+
 
 //Ruta usuiarios 
 router.post('/users/register', usersController.registerUser);
@@ -14,6 +16,12 @@ router.get('/cellphones', cellController.getAllCellPhones);
 router.post('/cellphones', cellController.addCellPhone);
 router.put('/cellphones/:brand/:model', cellController.updateCellPhone);
 router.delete('/cellphones/:brand/:model', cellController.deleteCellPhone);
+
+//Rutas computadoras 
+router.get('/cpus', cpuController.getAllCPUs);
+router.post('/cpus', cpuController.addCPU);
+router.put('/cpus/:id', cpuController.updateCPU);
+router.delete('/cpus/:id', cpuController.deleteCPU);
 
 
 module.exports = router;
