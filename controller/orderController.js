@@ -1,4 +1,4 @@
-/*const CellPhone = require('../models/celularModel');
+const CellPhone = require('../models/celularModel');
 const Computer = require('../models/computerModel');
 const GConsole = require('../models/gConsoleModel');
 const User = require('../models/usersModel');
@@ -123,4 +123,3 @@ exports.deleteOrder = async (req, res) => {
     res.status(400).json({ error: 'Error al eliminar la orden' });
   }
 };
-*/
