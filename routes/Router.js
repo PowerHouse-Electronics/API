@@ -33,10 +33,10 @@ router.put('/gameconsoles/:id', gconsoController.updateGameConsole);
 router.delete('/gameconsoles/:id', gconsoController.deleteGameConsole);
 
 //Rutas ordenes 
-/*router.post('/orders', orderController.createOrder);
+router.post('/orders', orderController.createOrder);
 router.get('/orders', orderController.getAllOrders);
 router.put('/orders/:id', orderController.updateOrderStatus);
-router.delete('/orders/:id', orderController.deleteOrder); */
+router.delete('/orders/:id', orderController.deleteOrder); 
 
 
 module.exports = router;
