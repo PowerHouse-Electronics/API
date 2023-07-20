@@ -244,6 +244,7 @@ const updateUser = async (req, res) => {
                 const imageBaseUrl = req.protocol + '://' + req.get('host');
                 const imageUrl = `${imageBaseUrl}/${updatedUser.image}`; // Ajusta esto según la estructura de tu modelo User
                 updatedUser.image = imageUrl;
+
                 return res.status(200).json({ user: updatedUser });
             } catch (error) {
                 console.error(error);
