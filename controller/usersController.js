@@ -296,8 +296,6 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ message: 'Modifier not found' });
         }
 
-  
-
         if (user.role === 'admin' && modifier.role !== 'superadmin') {
             return res.status(403).json({ message: 'Forbidden' });
         }
