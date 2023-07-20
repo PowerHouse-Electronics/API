@@ -12,6 +12,7 @@ router.post('/users/register', usersController.registerUser);
 router.post('/users/login', usersController.loginUser);
 router.put('/users/:id', usersController.updateUser);
 router.get('/users/:secret', usersController.getUsers);
+router.delete('/users/:id', usersController.deleteUser);
 
 //Rutas celulares 
 router.get('/cellphones', cellController.getAllCellPhones);

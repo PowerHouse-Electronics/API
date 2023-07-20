@@ -128,7 +128,7 @@ const updateUser = async (req, res) => {
             }
 
             const { id } = req.params;
-            const { name, email, password, address, phone, modifierId } = req.body;
+            const { name, email, password, address, phone, role,  modifierId } = req.body;
             const filename = req.file ? req.file.filename : null;
 
             if (!modifierId) {
@@ -170,7 +170,19 @@ const updateUser = async (req, res) => {
             console.log(user);
             console.log(modifier);
 
-            if (user._id.toString() !== modifier._id.toString()) {
+            // if (user._id.toString() !== modifier._id.toString()) {
+            //     if (filename) {
+            //         fs.unlink('src/' + filename, (err) => {
+            //             if (err) {
+            //                 console.error(err);
+            //                 return
+            //             }
+            //         });
+            //     }
+            //     return res.status(403).json({ message: 'Forbidden' });
+            // }
+
+            if (user.role === 'admin' && modifier.role === 'admin' && modifier.role === 'user') {
                 if (filename) {
                     fs.unlink('src/' + filename, (err) => {
                         if (err) {
@@ -182,7 +194,7 @@ const updateUser = async (req, res) => {
                 return res.status(403).json({ message: 'Forbidden' });
             }
 
-            if (user.role === 'admin' && modifier.role !== 'admin') {
+            if (user.role === 'admin' && modifier.role !== 'superadmin' ) {
                 if (filename) {
                     fs.unlink('src/' + filename, (err) => {
                         if (err) {
@@ -194,7 +206,7 @@ const updateUser = async (req, res) => {
                 return res.status(403).json({ message: 'Forbidden' });
             }
 
-            if (user.role === 'admin' && modifier.role !== 'superadmin') {
+            if (user.role === 'superadmin') {
                 if (filename) {
                     fs.unlink('src/' + filename, (err) => {
                         if (err) {
@@ -206,17 +218,10 @@ const updateUser = async (req, res) => {
                 return res.status(403).json({ message: 'Forbidden' });
             }
 
-            if (user.role === 'superadmin' && modifier.role !== 'superadmin') {
-                if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
-                        if (err) {
-                            console.error(err);
-                            return
-                        }
-                    });
-                }
-                return res.status(403).json({ message: 'Forbidden' });
-            }
+          
+            
+           
+
 
             
             user.name = name || user.name;
@@ -224,6 +229,12 @@ const updateUser = async (req, res) => {
             user.password = password ? bcrypt.hashSync(password, bcrypt.genSaltSync(10)) : user.password;
             user.address = address || user.address;
             user.phone = phone || user.phone;
+            if (modifier.role === 'superadmin') {
+            user.role = role || user.role;
+            }
+            else {
+                user.role = user.role;
+            }
             user.image = filename || user.image;
 
             try {
@@ -273,4 +284,47 @@ const getUsers = async (req, res) => {
     }
 }
 
-module.exports = { registerUser, loginUser, getUsers, updateUser };
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+    const { modifierId } = req.body;
+
+    try {
+        if (!modifierId) {
+            return res.status(400).json({ message: 'Missing modifierId' });
+        }
+
+        const user = await Users.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const modifier = await Users.findById(modifierId);
+        if (!modifier) {
+            return res.status(404).json({ message: 'Modifier not found' });
+        }
+
+  
+
+        if (user.role === 'admin' && modifier.role !== 'superadmin') {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        if (user.role === 'superadmin') {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        try {
+            await Users.deleteOne({ _id: id });
+            return res.status(200).json({ message: 'User deleted' });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+module.exports = { registerUser, loginUser, getUsers, updateUser, deleteUser };
