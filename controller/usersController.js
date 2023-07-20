@@ -33,7 +33,7 @@ const registerUser = async (req, res) => {
             }
 
             const { name, email, password, address, phone } = req.body;
-            const filename = req.file ? req.file.filename : null;
+            const filename = req.file ? req.file.filename : 'default.png';
 
             const existingUser = await Users.findOne({ email });
             if (existingUser) {
@@ -170,24 +170,14 @@ const updateUser = async (req, res) => {
             console.log(user);
             console.log(modifier);
 
-            // if (user._id.toString() !== modifier._id.toString()) {
-            //     if (filename) {
-            //         fs.unlink('src/' + filename, (err) => {
-            //             if (err) {
-            //                 console.error(err);
-            //                 return
-            //             }
-            //         });
-            //     }
-            //     return res.status(403).json({ message: 'Forbidden' });
-            // }
+         
 
             if (user.role === 'admin' && modifier.role === 'admin' && modifier.role === 'user') {
                 if (filename) {
                     fs.unlink('src/' + filename, (err) => {
                         if (err) {
                             console.error(err);
-                            return
+                            return res.status(500).json({ message: err.message });
                         }
                     });
                 }
@@ -211,29 +201,33 @@ const updateUser = async (req, res) => {
                     fs.unlink('src/' + filename, (err) => {
                         if (err) {
                             console.error(err);
-                            return
+                            return res.status(500).json({ message: err.message });
                         }
                     });
                 }
                 return res.status(403).json({ message: 'Forbidden' });
             }
 
-          
-            
-           
-
-
-            
             user.name = name || user.name;
             user.email = email || user.email;
             user.password = password ? bcrypt.hashSync(password, bcrypt.genSaltSync(10)) : user.password;
             user.address = address || user.address;
             user.phone = phone || user.phone;
+
             if (modifier.role === 'superadmin') {
             user.role = role || user.role;
             }
             else {
                 user.role = user.role;
+            }
+
+            if (filename && user.image !== 'default.png') {
+                fs.unlink('src/' + user.image, (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: err.message });
+                    }
+                });
             }
             user.image = filename || user.image;
 
@@ -314,6 +308,15 @@ const deleteUser = async (req, res) => {
 
         try {
             await Users.deleteOne({ _id: id });
+            const image = user.image;
+            if (image !== 'default.png') {
+                fs.unlink('src/' + image, (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: 'Internal server error' });
+                    }
+                });
+            }
             return res.status(200).json({ message: 'User deleted' });
         } catch (error) {
             console.error(error);
