@@ -1,10 +1,7 @@
 node_modules
-# Ignore all files in the src/users/ directory...
-src/users/*
-src/products/*
 
+// no subir ninguna imagen de la carpeta src ni subcarpetas
+src/users/
+src/products/
 
-# ...except this one
 !src/users/default.png
-```
-
