@@ -19,7 +19,8 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
   });
-app.use(express.static('./src'));
+app.use(express.static('./src/users'));
+app.use(express.static('./src/products'));
 app.use("/api", router);
 
 app.listen(port, () => {

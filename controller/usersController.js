@@ -9,7 +9,7 @@ const fs = require('fs');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'src');
+        cb(null, 'src/users');
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -174,7 +174,7 @@ const updateUser = async (req, res) => {
 
             if (user.role === 'admin' && modifier.role === 'admin' && modifier.role === 'user') {
                 if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
+                    fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
                             console.error(err);
                             return res.status(500).json({ message: err.message });
@@ -186,7 +186,7 @@ const updateUser = async (req, res) => {
 
             if (user.role === 'admin' && modifier.role !== 'superadmin' ) {
                 if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
+                    fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
                             console.error(err);
                             return
@@ -198,7 +198,7 @@ const updateUser = async (req, res) => {
 
             if (user.role === 'superadmin') {
                 if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
+                    fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
                             console.error(err);
                             return res.status(500).json({ message: err.message });
@@ -222,7 +222,7 @@ const updateUser = async (req, res) => {
             }
 
             if (filename && user.image !== 'default.png') {
-                fs.unlink('src/' + user.image, (err) => {
+                fs.unlink('src/users/' + user.image, (err) => {
                     if (err) {
                         console.error(err);
                         return res.status(500).json({ message: err.message });
@@ -240,6 +240,10 @@ const updateUser = async (req, res) => {
 
             try {
                 const updatedUser = await user.save();
+                // agrega la ruta base a la propiedad 'image'
+                const imageBaseUrl = req.protocol + '://' + req.get('host');
+                const imageUrl = `${imageBaseUrl}/${updatedUser.image}`; // Ajusta esto según la estructura de tu modelo User
+                updatedUser.image = imageUrl;
                 return res.status(200).json({ user: updatedUser });
             } catch (error) {
                 console.error(error);
@@ -308,7 +312,7 @@ const deleteUser = async (req, res) => {
             await Users.deleteOne({ _id: id });
             const image = user.image;
             if (image !== 'default.png') {
-                fs.unlink('src/' + image, (err) => {
+                fs.unlink('src/users/' + image, (err) => {
                     if (err) {
                         console.error(err);
                         return res.status(500).json({ message: 'Internal server error' });
