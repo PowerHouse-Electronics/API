@@ -1,3 +1,10 @@
 node_modules
-src/*.png
-!src/default.png
+# Ignore all files in the src/users/ directory...
+src/users/*
+src/products/*
+
+
+# ...except this one
+!src/users/default.png
+```
+
