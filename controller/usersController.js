@@ -35,6 +35,30 @@ const registerUser = async (req, res) => {
             const { name, email, password, address, phone } = req.body;
             const filename = req.file ? req.file.filename : 'default.png';
 
+            //validaciones de los campos del formulario de registro de usuario 
+            await check('name', 'Name is required').not().isEmpty().run(req);
+            await check('email', 'Email is required').not().isEmpty().run(req);
+            await check('email', 'Invalid email').isEmail().run(req);
+            await check('password', 'Password is required').not().isEmpty().run(req);
+            await check('password', 'Password must be at least 6 characters').isLength({ min: 6 }).run(req);
+            await check('address', 'Address is required').not().isEmpty().run(req);
+            await check('phone', 'Phone is required').not().isEmpty().run(req);
+
+            const validationErrors = validationResult(req);
+            if (!validationErrors.isEmpty()) {
+                if (filename !== 'default.png') {
+                    fs.unlink('src/users/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                // solo muestra el mensaje de cada error de validación
+                const errorMessages = validationErrors.array().map(error => error.msg);
+                return res.status(400).json({ errors: errorMessages });
+            }
+
             const existingUser = await Users.findOne({ email });
             if (existingUser) {
                 console.log(existingUser);
