@@ -20,7 +20,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).single('image');
 
-
 const registerUser = async (req, res) => {
     try {
         upload(req, res, async (err) => {
@@ -32,10 +31,9 @@ const registerUser = async (req, res) => {
                 return res.status(500).json({ message: err.message });
             }
 
-            const { name, email, password, address, phone } = req.body;
+            const { name, email, password, address, phone, role } = req.body;
             const filename = req.file ? req.file.filename : 'default.png';
 
-            //validaciones de los campos del formulario de registro de usuario 
             await check('name', 'Name is required').not().isEmpty().run(req);
             await check('email', 'Email is required').not().isEmpty().run(req);
             await check('email', 'Invalid email').isEmail().run(req);
@@ -54,7 +52,7 @@ const registerUser = async (req, res) => {
                         }
                     });
                 }
-                // solo muestra el mensaje de cada error de validación
+
                 const errorMessages = validationErrors.array().map(error => error.msg);
                 return res.status(400).json({ errors: errorMessages });
             }
@@ -86,7 +84,6 @@ const registerUser = async (req, res) => {
             });
 
             try {
-                // Validar el modelo Users antes de guardarlo en la base de datos
                 await newUser.validate();
             } catch (error) {
                 const errorMessages = Object.values(error.errors).map(err => err.message);
@@ -127,9 +124,8 @@ const loginUser = async (req, res) => {
         user.lastLogin = Date.now();
         await user.save();
 
-        // Agrega la ruta base a la propiedad 'image'
         const imageBaseUrl = req.protocol + '://' + req.get('host');
-        const imageUrl = `${imageBaseUrl}/${user.image}`; // Ajusta esto según la estructura de tu modelo User
+        const imageUrl = `${imageBaseUrl}/${user.image}`; 
 
         console.log(user);
         return res.status(200).json({ message: 'Login successful', user: { ...user.toObject(), image: imageUrl }, token });
@@ -264,9 +260,8 @@ const updateUser = async (req, res) => {
 
             try {
                 const updatedUser = await user.save();
-                // agrega la ruta base a la propiedad 'image'
                 const imageBaseUrl = req.protocol + '://' + req.get('host');
-                const imageUrl = `${imageBaseUrl}/${updatedUser.image}`; // Ajusta esto según la estructura de tu modelo User
+                const imageUrl = `${imageBaseUrl}/${updatedUser.image}`;
                 updatedUser.image = imageUrl;
 
                 return res.status(200).json({ user: updatedUser });

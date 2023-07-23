@@ -5,6 +5,7 @@ const cellController = require('../controller/cellController');
 const cpuController = require('../controller/cpuController');
 const gconsoController = require('../controller/gconsController');
 const orderController = require('../controller/orderController');
+const productsController = require('../controller/productsController');
 
 
 //Ruta usuiarios 
@@ -37,6 +38,9 @@ router.post('/orders', orderController.createOrder);
 router.get('/orders', orderController.getAllOrders);
 router.put('/orders/:id', orderController.updateOrderStatus);
 router.delete('/orders/:id', orderController.deleteOrder); 
+
+//Rutas productos
+router.get('/products', productsController.getAllProducts);
 
 
 module.exports = router;
