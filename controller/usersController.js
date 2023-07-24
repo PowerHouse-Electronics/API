@@ -125,7 +125,7 @@ const loginUser = async (req, res) => {
         await user.save();
 
         const imageBaseUrl = req.protocol + '://' + req.get('host');
-        const imageUrl = `${imageBaseUrl}/${user.image}`; 
+        const imageUrl = `${imageBaseUrl}/${user.image}`;
 
         console.log(user);
         return res.status(200).json({ message: 'Login successful', user: { ...user.toObject(), image: imageUrl }, token });
@@ -148,7 +148,7 @@ const updateUser = async (req, res) => {
             }
 
             const { id } = req.params;
-            const { name, email, password, address, phone, role,  modifierId } = req.body;
+            const { name, email, password, address, phone, role, modifierId } = req.body;
             const filename = req.file ? req.file.filename : null;
 
             if (!modifierId) {
@@ -190,7 +190,7 @@ const updateUser = async (req, res) => {
             console.log(user);
             console.log(modifier);
 
-         
+
 
             if (user.role === 'admin' && modifier.role === 'admin' && modifier.role === 'user') {
                 if (filename) {
@@ -204,7 +204,7 @@ const updateUser = async (req, res) => {
                 return res.status(403).json({ message: 'Forbidden' });
             }
 
-            if (user.role === 'admin' && modifier.role !== 'superadmin' ) {
+            if (user.role === 'admin' && modifier.role !== 'superadmin') {
                 if (filename) {
                     fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
@@ -235,7 +235,7 @@ const updateUser = async (req, res) => {
             user.phone = phone || user.phone;
 
             if (modifier.role === 'superadmin') {
-            user.role = role || user.role;
+                user.role = role || user.role;
             }
             else {
                 user.role = user.role;
@@ -277,7 +277,7 @@ const updateUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
-    const {secret } = req.params;
+    const { secret } = req.params;
 
     try {
         if (secret !== 'admin') {
@@ -294,8 +294,8 @@ const getUsers = async (req, res) => {
                 user.image = `${imageBaseUrl}/${user.image}`;
             });
             return res.status(200).json({ users });
-                       
-        } 
+
+        }
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });

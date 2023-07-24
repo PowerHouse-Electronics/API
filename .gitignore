@@ -1,7 +1,8 @@
 node_modules
 
-// no subir ninguna imagen de la carpeta src ni subcarpetas
-src/users/
-src/products/
+src/users/*
+src/products/*
 
 !src/users/default.png
+!src/products/Pdefault.png
+```

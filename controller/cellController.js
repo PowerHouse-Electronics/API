@@ -1,71 +1,251 @@
 const CellPhone = require('../models/celularModel');
+const { check, validationResult } = require('express-validator');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-// Visualizar todos los celulares
-exports.getAllCellPhones = async (req, res) => {
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'src/products/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ storage: storage }).single('image');
+
+const validateFields = [
+  check('brand', 'La marca es obligatoria').not().isEmpty(),
+  check('model', 'El modelo es obligatorio').not().isEmpty(),
+  check('color', 'El color es obligatorio').not().isEmpty(),
+  check('storage', 'El almacenamiento es obligatorio').not().isEmpty(),
+  check('price', 'El precio es obligatorio').not().isEmpty(),
+  check('price', 'El precio debe ser un número').isFloat(),
+  check('screenResolution', 'La resolución de pantalla es obligatoria').not().isEmpty(),
+  check('cameraResolution', 'La resolución de cámara es obligatoria').not().isEmpty(),
+  check('image', 'La imagen es obligatoria').not().isEmpty(),
+];
+
+
+const getAllCellPhones = async (req, res) => {
   try {
     const cellPhones = await CellPhone.find();
-    res.json(cellPhones);
+    const imageBaseUrl = req.protocol + '://' + req.get('host');
+    cellPhones.forEach((cellPhone) => {
+      cellPhone.image = imageBaseUrl + '/' + cellPhone.image;
+    });
+    return res.status(200).json({ cellPhones });
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los celulares' });
+    return res.status(500).json({ error: 'Error al obtener los celulares' });
   }
 };
 
-// Agregar un nuevo celular
-exports.addCellPhone = async (req, res) => {
+
+const addCellPhone = async (req, res) => {
   try {
-    const { brand, model, color, storage, price, screenResolution, cameraResolution, image } = req.body;
-
-    // Validar campos vacíos
-    if (!brand || !model || !color || !storage || !price || !screenResolution || !cameraResolution || !image) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-    }
-
-    // Validar duplicados
-    const existingCellPhone = await CellPhone.findOne({ brand, model, color });
-    if (existingCellPhone) {
-      return res.status(400).json({ error: 'Ya existe un celular con la misma marca, modelo y color' });
-    }
-
-    const newCellPhone = new CellPhone(req.body);
-    await newCellPhone.save();
-    res.status(201).json({ message: 'Celular agregado correctamente', newCellPhone });
-  } catch (error) {
-    res.status(400).json({ error: 'Error al agregar el celular' });
-  }
-};
-
-// Actualizar un celular existente por ID
-exports.updateCellPhone = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { brand, model, color, storage, price, screenResolution, cameraResolution, image } = req.body;
-
-    // Validar campos vacíos
-    if (!brand || !model || !color || !storage || !price || !screenResolution || !cameraResolution || !image) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-    }
-
-    const updatedCellPhone = await CellPhone.findByIdAndUpdate(id, req.body, {
-      new: true,
+    await new Promise((resolve, reject) => {
+      upload(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+          console.log(err);
+          return res.status(500).json({ message: err.message });
+        } else if (err) {
+          console.log(err);
+          return res.status(500).json({ message: err.message });
+        }
+        resolve();
+      });
     });
 
-    if (!updatedCellPhone) {
-      return res.status(404).json({ error: 'El celular no existe' });
+    const { brand, model, color, storage, price, screenResolution, cameraResolution } = req.body;
+    let image = req.file ? req.file.filename : 'Pdefault.png'; // Asignar 'Pdefault.png' si no se sube ninguna imagen
+
+    validateFields.forEach((field) => field.run(req));
+    // check if price is greater than 0
+    if (price <= 0) {
+      return res.status(400).json({ message: 'El precio debe ser mayor a 0' });
     }
 
-    res.json({ message: 'Celular actualizado correctamente', updatedCellPhone });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg);
+      return res.status(400).json({ error: errorMessages });
+    }
+
+    const existingCellphone = await CellPhone.findOne({ brand, model });
+    if (existingCellphone) {
+      console.log('Celular ya existe');
+      if (image !== 'Pdefault.png') {
+        fs.unlink(path.join('src/products', image), (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+        });
+      }
+      return res.status(400).json({ message: 'Celular ya existe' });
+    }
+
+    const newCellPhone = new CellPhone({
+      brand,
+      model,
+      color,
+      storage,
+      price,
+      screenResolution,
+      cameraResolution,
+      image,
+    });
+
+    try {
+      await newCellPhone.validate();
+    } catch (error) {
+      const errorMessages = Object.values(error.errors).map(err => err.message);
+      if (image !== 'Pdefault.png') {
+        fs.unlink(path.join('src/products', image), (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: err.message });
+          }
+        });
+      }
+      return res.status(400).json({ errors: errorMessages });
+    }
+
+    try {
+      const cellPhone = await newCellPhone.save();
+      const imageBaseUrl = req.protocol + '://' + req.get('host');
+      cellPhone.image = imageBaseUrl + '/' + cellPhone.image;
+      cellPhone.cameraResolution = cellPhone.cameraResolution + 'px';
+      cellPhone.storage = cellPhone.storage + 'GB';
+      return res.status(200).json({ message: 'Celular agregado correctamente', cellPhone });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+
   } catch (error) {
-    res.status(400).json({ error: 'Error al actualizar el celular' });
+    console.error(error);
+    return res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
-// Eliminar un celular existente por ID
-exports.deleteCellPhone = async (req, res) => {
+
+
+
+const updateCellPhone = async (req, res) => {
   try {
+    // Manejar la carga del archivo antes de continuar
+    await new Promise((resolve, reject) => {
+      upload(req, res, (err) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({ message: err.message });
+        }
+        resolve();
+      });
+    });
+
     const { id } = req.params;
-    await CellPhone.findByIdAndDelete(id);
-    res.json({ message: 'Celular eliminado correctamente' });
+    const { brand, model, color, storage, price, screenResolution, cameraResolution } = req.body;
+    const filename = req.file ? req.file.filename : null;
+
+    validateFields.forEach((field) => field.run(req));
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(error => error.msg);
+      return res.status(400).json({ error: errorMessages });
+    }
+
+    const product = await CellPhone.findById(id);
+    if (!product) {
+      if (filename) {
+        // Eliminar el archivo cargado si no existe el producto
+        fs.unlink(path.join('src/products', filename), (err) => {
+          if (err) {
+            console.error(err);
+          }
+        });
+      }
+      return res.status(404).json({ message: 'Celular no encontrado' });
+    }
+
+    if (filename && product.image !== 'Pdefault.png') {
+      // Eliminar la imagen anterior si se carga una nueva imagen
+      fs.unlink(path.join('src/products', product.image), (err) => {
+        if (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    product.brand = brand;
+    product.model = model;
+    product.color = color;
+    product.storage = storage;
+    product.price = price;
+    product.screenResolution = screenResolution;
+    product.cameraResolution = cameraResolution;
+    product.image = filename || product.image;
+
+    try {
+      await product.validate();
+    } catch (error) {
+      const errorMessages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ errors: errorMessages });
+    }
+
+    try {
+      const updatedProduct = await product.save();
+      const imageBaseUrl = req.protocol + '://' + req.get('host');
+      const imageUrl = imageBaseUrl + '/' + updatedProduct.image;
+      updatedProduct.image = imageUrl;
+      return res.status(200).json({ message: 'Celular actualizado correctamente', updatedProduct });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
   } catch (error) {
-    res.status(400).json({ error: 'Error al eliminar el celular' });
+    console.error(error);
+    return res.status(500).json({ message: 'Error al actualizar el celular' });
   }
 };
+
+
+const deleteCellPhone = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const product = await CellPhone.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    try {
+      await CellPhone.deleteOne({ _id: id });
+      const image = product.image;
+      if (image !== 'Pdefault.png') {
+        fs.unlink('src/products/' + image, (err) => { // Agregar la barra diagonal en la ruta
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+        });
+      }
+      return res.status(200).json({ message: 'Celular eliminado correctamente' });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+module.exports = { getAllCellPhones, addCellPhone, updateCellPhone, deleteCellPhone };
