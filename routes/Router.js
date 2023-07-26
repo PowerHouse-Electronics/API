@@ -14,6 +14,7 @@ router.post('/users/login', usersController.loginUser);
 router.put('/users/:id', usersController.updateUser);
 router.get('/users/:secret', usersController.getUsers);
 router.delete('/users/:id', usersController.deleteUser);
+router.post ('/users/:secret', usersController.searchUsers);
 
 //Rutas celulares 
 router.get('/cellphones', cellController.getAllCellPhones);
@@ -41,6 +42,8 @@ router.delete('/orders/:id', orderController.deleteOrder);
 
 //Rutas productos
 router.get('/products', productsController.getAllProducts);
+router.get('/products/:category', productsController.getProductsByCategory);
+router.post('/products', productsController.searchItems)
 
 
 module.exports = router;

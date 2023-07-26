@@ -351,5 +351,40 @@ const deleteUser = async (req, res) => {
     }
 }
 
+const searchUsers = async (req, res) => {
+    try {
+        const { name } = req.body;
+        const users = await Users.find();
 
-module.exports = { registerUser, loginUser, getUsers, updateUser, deleteUser };
+        let filteredUsers = users;
+        if (name) {
+            const nameWords = name.toLowerCase().split(' ');
+
+            filteredUsers = users.filter(user => {
+                const userName = user.name.toLowerCase();
+                return nameWords.every(word => {
+                    const regex = new RegExp(`\\b${word}\\b`);
+                    return regex.test(userName);
+                });
+            });
+        }
+
+        if (filteredUsers.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron usuarios' });
+        }
+
+        const imageBaseUrl = req.protocol + '://' + req.get('host');
+        filteredUsers.forEach(user => {
+            user.image = `${imageBaseUrl}/${user.image}`;
+        });
+
+        return res.status(200).json({ users: filteredUsers });
+    } catch (error) {
+        return res.status(500).json({ error: 'Error al obtener los usuarios' });
+    }
+};
+
+
+
+
+module.exports = { registerUser, loginUser, getUsers, updateUser, deleteUser, searchUsers };
