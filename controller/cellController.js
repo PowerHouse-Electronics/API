@@ -27,6 +27,8 @@ const validateFields = [
   check('screenResolution', 'La resolución de pantalla es obligatoria').not().isEmpty(),
   check('cameraResolution', 'La resolución de cámara es obligatoria').not().isEmpty(),
   check('image', 'La imagen es obligatoria').not().isEmpty(),
+  check('stock', 'El stock es obligatorio').not().isEmpty(),
+  check('stock', 'El stock debe ser un número').isInt()
 ];
 
 
@@ -59,11 +61,10 @@ const addCellPhone = async (req, res) => {
       });
     });
 
-    const { brand, model, color, storage, price, screenResolution, cameraResolution } = req.body;
-    let image = req.file ? req.file.filename : 'Pdefault.png'; // Asignar 'Pdefault.png' si no se sube ninguna imagen
+    const { brand, model, color, storage, price, screenResolution, cameraResolution, stock } = req.body;
+    let image = req.file ? req.file.filename : 'Pdefault.png'; 
 
     validateFields.forEach((field) => field.run(req));
-    // check if price is greater than 0
     if (price <= 0) {
       return res.status(400).json({ message: 'El precio debe ser mayor a 0' });
     }
@@ -74,7 +75,7 @@ const addCellPhone = async (req, res) => {
       return res.status(400).json({ error: errorMessages });
     }
 
-    const existingCellphone = await CellPhone.findOne({ brand, model });
+    const existingCellphone = await CellPhone.findOne({ brand, model, color, storage });
     if (existingCellphone) {
       console.log('Celular ya existe');
       if (image !== 'Pdefault.png') {
@@ -88,6 +89,18 @@ const addCellPhone = async (req, res) => {
       return res.status(400).json({ message: 'Celular ya existe' });
     }
 
+    if (stock <= 0) {
+      if (image !== 'Pdefault.png') {
+        fs.unlink(path.join('src/products', image), (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: err.message });
+          }
+        });
+      }
+      return res.status(400).json({ message: 'El stock debe ser mayor a 0' });
+    }
+
     const newCellPhone = new CellPhone({
       brand,
       model,
@@ -97,6 +110,7 @@ const addCellPhone = async (req, res) => {
       screenResolution,
       cameraResolution,
       image,
+      stock
     });
 
     try {
@@ -149,7 +163,7 @@ const updateCellPhone = async (req, res) => {
     });
 
     const { id } = req.params;
-    const { brand, model, color, storage, price, screenResolution, cameraResolution } = req.body;
+    const { brand, model, color, storage, price, screenResolution, cameraResolution, stock } = req.body;
     const filename = req.file ? req.file.filename : null;
 
     validateFields.forEach((field) => field.run(req));
@@ -182,6 +196,10 @@ const updateCellPhone = async (req, res) => {
       });
     }
 
+    if (stock < product.stock) {
+      return res.status(400).json({ message: 'El stock debe ser mayor o igual al stock actual' });
+    }
+
     product.brand = brand;
     product.model = model;
     product.color = color;
@@ -190,6 +208,7 @@ const updateCellPhone = async (req, res) => {
     product.screenResolution = screenResolution;
     product.cameraResolution = cameraResolution;
     product.image = filename || product.image;
+    product.stock = stock;
 
     try {
       await product.validate();

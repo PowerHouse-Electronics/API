@@ -34,6 +34,10 @@ const cellphoneSchema = new Schema({
     type: String,
     required: true
   },
+  stock: {
+    type: Number,
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now()

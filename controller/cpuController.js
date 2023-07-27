@@ -54,7 +54,7 @@ const addCPU = async (req, res) => {
       });
     });
 
-    const { brand, model, processor, ram, storage, price, operatingSystem, graphicsCard } = req.body;
+    const { brand, model, processor, ram, storage, price, operatingSystem, graphicsCard, stock } = req.body;
     let image = req.file ? req.file.filename : 'Pdefault.png';
 
     validateFields.forEach((field) => field.run(req));
@@ -78,6 +78,20 @@ const addCPU = async (req, res) => {
       return res.status(400).json({ message: 'Ya existe una CPU con la misma marca y modelo' });
     }
 
+    // el stock ingresado es mayor a 0
+    if (stock <= 0) {
+      if (image !== 'Pdefault.png') {
+        fs.unlink(path.join('src/products', image), (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: err.message });
+          }
+        });
+      }
+      return res.status(400).json({ message: 'El stock debe ser mayor a 0' });
+    }
+
+
     const newCPU = new CPU({
       brand,
       model,
@@ -88,6 +102,7 @@ const addCPU = async (req, res) => {
       operatingSystem,
       graphicsCard,
       image,
+      stock
     });
 
     try {
