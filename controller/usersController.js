@@ -34,6 +34,9 @@ const registerUser = async (req, res) => {
             const { name, email, password, address, phone, role } = req.body;
             const filename = req.file ? req.file.filename : 'default.png';
 
+            console.log(req.body);
+            console.log(req.file);
+
             await check('name', 'Name is required').not().isEmpty().run(req);
             await check('email', 'Email is required').not().isEmpty().run(req);
             await check('email', 'Invalid email').isEmail().run(req);
@@ -109,6 +112,8 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log(req.body);
+
         const user = await Users.findOne({ email });
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
@@ -149,7 +154,11 @@ const updateUser = async (req, res) => {
 
             const { id } = req.params;
             const { name, email, password, address, phone, role, modifierId } = req.body;
+            console.log(req.body);
+            console.log(req.file);
+
             const filename = req.file ? req.file.filename : null;
+            
 
             if (!modifierId) {
                 if (filename) {
@@ -305,6 +314,8 @@ const getUsers = async (req, res) => {
 const deleteUser = async (req, res) => {
     const { id } = req.params;
     const { modifierId } = req.body;
+    console.log(req.body);
+
 
     try {
         if (!modifierId) {
@@ -354,6 +365,7 @@ const deleteUser = async (req, res) => {
 const searchUsers = async (req, res) => {
     try {
         const { name } = req.body;
+        console.log(req.body);
         const users = await Users.find();
 
         let filteredUsers = users;
