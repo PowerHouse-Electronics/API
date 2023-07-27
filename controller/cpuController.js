@@ -66,7 +66,7 @@ const addCPU = async (req, res) => {
       return res.status(400).json({ error: errorMessages });
     }
 
-    const existingCPU = await CPU.findOne({ brand, model });
+    const existingCPU = await CPU.findOne({ brand, model, processor, ram, storage, operatingSystem, graphicsCard });
     if (existingCPU) {
       if (image !== 'Pdefault.png') {
         fs.unlink(path.join('src/products', image), (err) => {
