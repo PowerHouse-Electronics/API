@@ -163,7 +163,7 @@ const updateCellPhone = async (req, res) => {
     });
 
     const { id } = req.params;
-    const { brand, model, color, storage, price, screenResolution, cameraResolution, stock } = req.body;
+    const {price, stock } = req.body;
     const filename = req.file ? req.file.filename : null;
 
     validateFields.forEach((field) => field.run(req));
@@ -200,13 +200,7 @@ const updateCellPhone = async (req, res) => {
       return res.status(400).json({ message: 'El stock debe ser mayor o igual al stock actual' });
     }
 
-    product.brand = brand;
-    product.model = model;
-    product.color = color;
-    product.storage = storage;
     product.price = price;
-    product.screenResolution = screenResolution;
-    product.cameraResolution = cameraResolution;
     product.image = filename || product.image;
     product.stock = stock;
 

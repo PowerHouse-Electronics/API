@@ -25,6 +25,7 @@ const validateFields = [
   check('features').not().isEmpty().withMessage('Las características son obligatorias'),
   check('color').not().isEmpty().withMessage('El color es obligatorio'),
   check('image').not().isEmpty().withMessage('La imagen es obligatoria'),
+  check('stock').not().isEmpty().withMessage('El stock es obligatorio').isInt().withMessage('El stock debe ser un número')
 ];
 
 const getAllGameConsoles = async (req, res) => {
@@ -52,7 +53,7 @@ const addGameConsole = async (req, res) => {
       });
     });
     
-    const { brand, model, storage, price, features, color } = req.body;
+    const { brand, model, storage, price, features, color, stock } = req.body;
     let image = req.file ? req.file.filename : 'Pdefault.png';
 
     validateFields.forEach((field) => field.run(req));
@@ -76,6 +77,18 @@ const addGameConsole = async (req, res) => {
       return res.status(400).json({ message: 'Ya existe una consola de juego con la misma marca y modelo' });
     }
 
+    if (stock < 0) {
+      if (image !== 'Pdefault.png') {
+        fs.unlink(path.join('src/products', image), (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: err.message });
+          }
+        });
+      }
+      return res.status(400).json({ message: 'El stock no puede ser negativo' });
+    }
+
     const newGameConsole = new GameConsole({
       brand,
       model,
@@ -84,6 +97,7 @@ const addGameConsole = async (req, res) => {
       features,
       color,
       image,
+      stock
     });
 
     try {
@@ -130,7 +144,7 @@ const updateGameConsole = async (req, res) => {
     });
 
     const { id } = req.params;
-    const { brand, model, storage, price, features, color } = req.body;
+    const { price, stock } = req.body;
     const filename = req.file ? req.file.filename : null;
 
     validateFields.forEach((field) => field.run(req));
@@ -173,13 +187,9 @@ const updateGameConsole = async (req, res) => {
       });
     }
 
-    gameConsole.brand = brand;
-    gameConsole.model = model;
-    gameConsole.storage = storage;
     gameConsole.price = price;
-    gameConsole.features = features;
-    gameConsole.color = color;
     gameConsole.image = filename || gameConsole.image;
+    gameConsole.stock = stock;
 
     try {
       await gameConsole.validate();

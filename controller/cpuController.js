@@ -27,6 +27,7 @@ const validateFields = [
   check('operatingSystem').not().isEmpty().withMessage('El sistema operativo es obligatorio'),
   check('graphicsCard').not().isEmpty().withMessage('La tarjeta gráfica es obligatoria'),
   check('image').not().isEmpty().withMessage('La imagen es obligatoria'),
+  check('stock').not().isEmpty().withMessage('El stock es obligatorio').isInt().withMessage('El stock debe ser un número')
 ];
 
 const getAllCPUs = async (req, res) => {
@@ -78,7 +79,6 @@ const addCPU = async (req, res) => {
       return res.status(400).json({ message: 'Ya existe una CPU con la misma marca y modelo' });
     }
 
-    // el stock ingresado es mayor a 0
     if (stock <= 0) {
       if (image !== 'Pdefault.png') {
         fs.unlink(path.join('src/products', image), (err) => {
@@ -149,7 +149,7 @@ const updateCPU = async (req, res) => {
     });
 
     const { id } = req.params;
-    const { brand, model, processor, ram, storage, price, operatingSystem, graphicsCard } = req.body;
+    const { price, stock } = req.body;
     const filename = req.file ? req.file.filename : null;
 
     validateFields.forEach((field) => field.run(req));
@@ -180,15 +180,10 @@ const updateCPU = async (req, res) => {
       });
     }
 
-    cpu.brand = brand;
-    cpu.model = model;
-    cpu.processor = processor;
-    cpu.ram = ram;
-    cpu.storage = storage;
+    
     cpu.price = price;
-    cpu.operatingSystem = operatingSystem;
-    cpu.graphicsCard = graphicsCard;
     cpu.image = filename || cpu.image;
+    cpu.stock = stock;
 
     try {
       await cpu.validate();
