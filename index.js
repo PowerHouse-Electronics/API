@@ -23,11 +23,7 @@ app.use(express.static('./src/users/'));
 app.use(express.static('./src/products/'));
 
 app.use("/api", router);
-app.use("/", (req, res) => {
-  const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  console.log(`La dirección IP del cliente es: ${clientIp}`);
-  return res.status(200).json({ message: 'Que quieres verga' });
-});
+
 
 app.listen(port, () => {
   console.log(`Example app listening at :${port}`);
