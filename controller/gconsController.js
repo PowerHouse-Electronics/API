@@ -64,7 +64,7 @@ const addGameConsole = async (req, res) => {
       return res.status(400).json({ error: errorMessages });
     }
 
-    const existingGameConsole = await GameConsole.findOne({ brand, model });
+    const existingGameConsole = await GameConsole.findOne({ brand, model, storage, color, features });
     if (existingGameConsole) {
       if (image !== 'Pdefault.png') {
         fs.unlink(path.join('src/products', image), (err) => {
@@ -74,7 +74,7 @@ const addGameConsole = async (req, res) => {
           }
         });
       }
-      return res.status(400).json({ message: 'Ya existe una consola de juego con la misma marca y modelo' });
+      return res.status(400).json({ message: 'Ya existe una consola de juego con las mismas caracteristicas' });
     }
 
     if (stock < 0) {
@@ -185,6 +185,17 @@ const updateGameConsole = async (req, res) => {
           console.error(err);
         }
       });
+    }
+
+    if (stock < gameConsole.stock) {
+      if (filename) {
+        fs.unlink(path.join('src/products', filename), (err) => {
+          if (err) {
+            console.error(err);
+          }
+        });
+      }
+      return res.status(400).json({ message: 'El stock no puede ser menor al stock actual' });
     }
 
     gameConsole.price = price;

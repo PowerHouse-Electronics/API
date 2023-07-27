@@ -156,7 +156,7 @@ const updateUser = async (req, res) => {
             console.log(req.file);
 
             const filename = req.file ? req.file.filename : null;
-            
+
 
             if (!modifierId) {
                 if (filename) {

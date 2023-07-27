@@ -76,7 +76,7 @@ const addCPU = async (req, res) => {
           }
         });
       }
-      return res.status(400).json({ message: 'Ya existe una CPU con la misma marca y modelo' });
+      return res.status(400).json({ message: 'Ya existe una CPU con la misma marca, modelo y especificaciones' });
     }
 
     if (stock <= 0) {
@@ -171,7 +171,6 @@ const updateCPU = async (req, res) => {
       }
       return res.status(404).json({ message: 'La CPU no existe' });
     }
-
     if (filename && cpu.image !== 'Pdefault.png') {
       fs.unlink(path.join('src/products', cpu.image), (err) => {
         if (err) {
@@ -179,6 +178,18 @@ const updateCPU = async (req, res) => {
         }
       });
     }
+
+    if (stock < cpu.stock) {
+      if (filename) {
+        fs.unlink(path.join('src/products', filename), (err) => {
+          if (err) {
+            console.error(err);
+          }
+        });
+      }
+      return res.status(400).json({ message: 'El stock debe ser mayor o igual al actual' });
+    }
+
 
     
     cpu.price = price;
