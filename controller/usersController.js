@@ -62,7 +62,6 @@ const registerUser = async (req, res) => {
 
             const existingUser = await Users.findOne({ email });
             if (existingUser) {
-                console.log(existingUser);
                 if (filename) {
                     fs.unlink('src/' + filename, (err) => {
                         if (err) {
@@ -132,7 +131,6 @@ const loginUser = async (req, res) => {
         const imageBaseUrl = req.protocol + '://' + req.get('host');
         const imageUrl = `${imageBaseUrl}/${user.image}`;
 
-        console.log(user);
         return res.status(200).json({ message: 'Login successful', user: { ...user.toObject(), image: imageUrl }, token });
     } catch (error) {
         console.error(error);
@@ -196,10 +194,6 @@ const updateUser = async (req, res) => {
                 }
                 return res.status(404).json({ message: 'Modifier not found' });
             }
-            console.log(user);
-            console.log(modifier);
-
-
 
             if (user.role === 'admin' && modifier.role === 'admin' && modifier.role === 'user') {
                 if (filename) {
@@ -294,7 +288,6 @@ const getUsers = async (req, res) => {
         }
         if (secret === 'admin') {
             const users = await Users.find();
-            console.log(users);
             if (!users) {
                 return res.status(404).json({ message: 'Users not found' });
             }

@@ -7,7 +7,6 @@ const getAllProducts = async (req, res) => {
         const cellphones = await CellPhone.find();
         const computers = await Computer.find();
         const gconsoles = await GConsole.find();
-        // anade el campo image_url a cada producto
         cellphones.forEach(cellphone => {
             const imageBaseUrl = req.protocol + '://' + req.get('host');
             const imageUrl = imageBaseUrl + '/' + cellphone.image;
@@ -30,19 +29,18 @@ const getAllProducts = async (req, res) => {
 };
 
 
-// filter by category
 const getProductsByCategory = async (req, res) => {
     try {
         const { category } = req.params;
         let products = [];
         switch (category) {
-            case 'celulares':
+            case 'cellphones':
                 products = await CellPhone.find();
                 break;
-            case 'computadoras':
+            case 'computers':
                 products = await Computer.find();
                 break;
-            case 'consolas':
+            case 'consoles':
                 products = await GConsole.find();
                 break;
             default:

@@ -8,6 +8,7 @@ const orderController = require('../controller/orderController');
 const productsController = require('../controller/productsController');
 
 
+
 //Ruta usuiarios 
 router.post('/users/register', usersController.registerUser);
 router.post('/users/login', usersController.loginUser);
@@ -46,5 +47,4 @@ router.get('/products/:category', productsController.getProductsByCategory);
 router.post('/products', productsController.searchItems)
 
 
-module.exports = router;
-  
+module.exports = router;  
