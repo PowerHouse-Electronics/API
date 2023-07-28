@@ -123,7 +123,7 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '5m' });
 
         user.lastLogin = Date.now();
         await user.save();
