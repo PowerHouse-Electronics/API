@@ -16,6 +16,7 @@ router.put('/users/:id', usersController.updateUser);
 router.get('/users/:secret', usersController.getUsers);
 router.delete('/users/:id', usersController.deleteUser);
 router.post ('/users/:secret', usersController.searchUsers);
+router.post('/users/image/:id', usersController.uploadImage);
 
 //Rutas celulares 
 router.get('/cellphones', cellController.getAllCellPhones);

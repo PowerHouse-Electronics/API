@@ -391,5 +391,70 @@ const searchUsers = async (req, res) => {
     }
 };
 
+const changeImage = async (req, res) => {
+    try {
+        upload(req, res, async (err) => {
+            if (err instanceof multer.MulterError) {
+                console.log(err);
+                return res.status(500).json({ message: err.message });
+            } else if (err) {
+                console.log(err);
+                return res.status(500).json({ message: err.message });
+            }
 
-module.exports = { registerUser, loginUser, getUsers, updateUser, deleteUser, searchUsers };
+            const { id } = req.params;
+            console.log(req.body);
+            console.log(req.file);
+
+            const filename = req.file ? req.file.filename : null;
+
+            const user = await Users.findById(id);
+            if (!user) {
+                if (filename) {
+                    fs.unlink('src/' + filename, (err) => {
+                        if (err) {
+                            console.error(err);
+                            return
+                        }
+                    });
+                }
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            if (filename && user.image !== 'default.png') {
+                fs.unlink('src/users/' + user.image, (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: err.message });
+                    }
+                });
+            }
+            user.image = filename || user.image;
+
+            try {
+                await user.validate();
+            } catch (error) {
+                const errorMessages = Object.values(error.errors).map(err => err.message);
+                return res.status(400).json({ errors: errorMessages });
+            }
+
+            try {
+                const updatedUser = await user.save();
+                const imageBaseUrl = req.protocol + '://' + req.get('host');
+                const imageUrl = `${imageBaseUrl}/${updatedUser.image}`;
+                updatedUser.image = imageUrl;
+
+                return res.status(200).json({ user: updatedUser });
+            } catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+module.exports = { registerUser, loginUser, getUsers, updateUser, deleteUser, searchUsers, changeImage };
