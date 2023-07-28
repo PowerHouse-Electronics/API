@@ -2,6 +2,7 @@ node_modules
 
 src/users/*
 src/products/*
+src/charts/*
 
 !src/users/default.png
 !src/products/Pdefault.png
