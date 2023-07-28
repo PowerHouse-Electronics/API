@@ -158,18 +158,18 @@ const updateUser = async (req, res) => {
             const filename = req.file ? req.file.filename : null;
 
 
-            if (!modifierId) {
-                if (filename) {
-                    fs.unlink('src/users/' + filename, (err) => {
-                        if (err) {
-                            console.error(err);
-                            return
-                        }
-                    });
-                }
-                console.log('Missing modifierId');
-                return res.status(400).json({ message: 'Missing modifierId' });
-            }
+            // if (!modifierId) {
+            //     if (filename) {
+            //         fs.unlink('src/users/' + filename, (err) => {
+            //             if (err) {
+            //                 console.error(err);
+            //                 return
+            //             }
+            //         });
+            //     }
+            //     console.log('Missing modifierId');
+            //     return res.status(400).json({ message: 'Missing modifierId' });
+            // }
 
             const user = await Users.findById(id);
             if (!user) {
