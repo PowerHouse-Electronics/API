@@ -160,7 +160,7 @@ const updateUser = async (req, res) => {
 
             if (!modifierId) {
                 if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
+                    fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
                             console.error(err);
                             return
@@ -173,7 +173,7 @@ const updateUser = async (req, res) => {
             const user = await Users.findById(id);
             if (!user) {
                 if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
+                    fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
                             console.error(err);
                             return
@@ -185,7 +185,7 @@ const updateUser = async (req, res) => {
             const modifier = await Users.findById(modifierId);
             if (!modifier) {
                 if (filename) {
-                    fs.unlink('src/' + filename, (err) => {
+                    fs.unlink('src/users/' + filename, (err) => {
                         if (err) {
                             console.error(err);
                             return
@@ -388,8 +388,6 @@ const searchUsers = async (req, res) => {
         return res.status(500).json({ error: 'Error al obtener los usuarios' });
     }
 };
-
-
 
 
 module.exports = { registerUser, loginUser, getUsers, updateUser, deleteUser, searchUsers };
