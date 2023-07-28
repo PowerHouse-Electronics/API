@@ -49,6 +49,6 @@ router.get('/products/:category', productsController.getProductsByCategory);
 router.post('/products', productsController.searchItems)
 
 //rutas canvas
-router.get('/canvas/:orderId', chartsController.generateChartAndSend);
+router.get('/canvas', chartsController.generateChartAndSend);
 
 module.exports = router;  

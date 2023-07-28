@@ -18,6 +18,7 @@ const getAllProducts = async (req, res) => {
             computer.image = imageUrl;
         });
         gconsoles.forEach(gconsole => {
+            
             const imageBaseUrl = req.protocol + '://' + req.get('host');
             const imageUrl = imageBaseUrl + '/' + gconsole.image;
             gconsole.image = imageUrl;

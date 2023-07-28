@@ -25,6 +25,7 @@ app.use((req, res, next) => {
 
 app.use(express.static('./src/users/'));
 app.use(express.static('./src/products/'));
+app.use(express.static('./src/charts/'));
 
 app.use("/api", router);
 
