@@ -6,6 +6,7 @@ const cpuController = require('../controller/cpuController');
 const gconsoController = require('../controller/gconsController');
 const orderController = require('../controller/orderController');
 const productsController = require('../controller/productsController');
+const chartsController = require('../controller/chartsController');
 
 
 
@@ -47,5 +48,7 @@ router.get('/products', productsController.getAllProducts);
 router.get('/products/:category', productsController.getProductsByCategory);
 router.post('/products', productsController.searchItems)
 
+//rutas canvas
+router.get('/canvas/:orderId', chartsController.generateChartAndSend);
 
 module.exports = router;  
