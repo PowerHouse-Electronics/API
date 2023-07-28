@@ -167,6 +167,7 @@ const updateUser = async (req, res) => {
                         }
                     });
                 }
+                console.log('Missing modifierId');
                 return res.status(400).json({ message: 'Missing modifierId' });
             }
 
@@ -258,6 +259,7 @@ const updateUser = async (req, res) => {
                 await user.validate();
             } catch (error) {
                 const errorMessages = Object.values(error.errors).map(err => err.message);
+                console.log(errorMessages);
                 return res.status(400).json({ errors: errorMessages });
             }
 
