@@ -42,6 +42,7 @@ router.post('/orders', orderController.createOrder);
 router.get('/orders', orderController.getAllOrders);
 router.put('/orders/:id', orderController.updateOrderStatus);
 router.delete('/orders/:id', orderController.deleteOrder); 
+router.get('/orders/:id', orderController.getOrderByUserId);
 
 //Rutas productos
 router.get('/products', productsController.getAllProducts);

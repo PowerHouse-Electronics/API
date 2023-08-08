@@ -35,6 +35,8 @@ const createOrder = async (req, res) => {
 
     let total = 0;
     const orderProducts = [];
+    const productsToUpdateStock = [];
+
     for (const item of products) {
       const { product, quantity } = item;
       let existingProduct;
@@ -50,6 +52,10 @@ const createOrder = async (req, res) => {
         }
       }
 
+      if (existingProduct.stock < quantity) {
+        return res.status(400).json({ error: 'Stock insuficiente para completar la compra' });
+      }
+
       const productTotal = existingProduct.price * quantity;
       total += productTotal;
 
@@ -60,6 +66,9 @@ const createOrder = async (req, res) => {
         brand: existingProduct.brand,
         model: existingProduct.model
       });
+
+      // Actualizar el stock del producto
+      productsToUpdateStock.push({ product: existingProduct, quantity });
     }
 
     for (const item of products) {
@@ -68,6 +77,7 @@ const createOrder = async (req, res) => {
       }
     }
 
+    // Guardar la nueva orden
     const newOrder = new Order({
       user: userId,
       products: orderProducts,
@@ -77,11 +87,19 @@ const createOrder = async (req, res) => {
 
     await newOrder.save();
 
+    // Actualizar el stock de los productos
+    for (const productToUpdate of productsToUpdateStock) {
+      const { product, quantity } = productToUpdate;
+      product.stock -= quantity;
+      await product.save();
+    }
+
     res.status(201).json({ message: 'Orden creada correctamente', newOrder });
   } catch (error) {
     res.status(400).json({ error: 'Error al crear la orden' });
   }
 };
+
 
 
 
@@ -109,7 +127,6 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: 'La orden no existe' });
     }
 
-    //obtener el estado de la orden y validar si es pendiente o enviado para poder actualizarlo
     if (existingOrder.status === 'pending') {
       status = 'sent';
     } else if (existingOrder.status === 'sent') {
@@ -127,12 +144,10 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-// Eliminar una orden
 const deleteOrder = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validar que la orden exista en la base de datos
     const existingOrder = await Order.findById(id);
     if (!existingOrder) {
       return res.status(404).json({ error: 'La orden no existe' });
@@ -144,5 +159,61 @@ const deleteOrder = async (req, res) => {
     res.status(400).json({ error: 'Error al eliminar la orden' });
   }
 };
+const getOrderByUserId = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { createOrder, getAllOrders, updateOrderStatus, deleteOrder };
+    const existingOrder = await Order.find({ user: id });
+
+    if (!existingOrder || existingOrder.length === 0) {
+      return res.status(404).json({ error: 'La orden no existe' });
+    }
+
+    const ordersData = [];
+
+    for (const order of existingOrder) {
+      const shippingAddress = order.shippingAddress;
+      const total = order.total;
+      const orderData = {
+        shippingAddress,
+        total,
+        products: []
+      };
+
+      for (const product of order.products) {
+        const productId = product.product;
+        const quantity = product.quantity;
+        const price = product.price;
+
+        let existingProduct = await CellPhone.findById(productId);
+        if (!existingProduct) {
+          existingProduct = await Computer.findById(productId);
+          if (!existingProduct) {
+            existingProduct = await GConsole.findById(productId);
+            if (!existingProduct) {
+              return res.status(404).json({ error: 'El producto no existe' });
+            }
+          }
+        }
+
+        const productInfo = {
+          productName: `${existingProduct.brand} ${existingProduct.model}`,
+          quantity,
+          price
+        };
+
+        orderData.products.push(productInfo);
+      }
+
+      ordersData.push(orderData);
+    }
+
+    return res.json(ordersData);
+  }
+  catch (error) {
+    return res.status(500).json({ error: 'Error al obtener la orden' });
+  }
+};
+
+
+module.exports = { createOrder, getAllOrders, updateOrderStatus, deleteOrder, getOrderByUserId };
