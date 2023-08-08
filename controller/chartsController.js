@@ -65,40 +65,69 @@ const generateChart = async (data, outputPath) => {
 };
 
 const generateProductsData = async (orders) => {
-    const products = [];
-    for (const order of orders) {
-        for (const product of order.products) {
-            const existingProduct = products.find((p) => p.product === product.product.toString());
-            if (existingProduct) {
-                existingProduct.quantity += product.quantity;
-            } else {
-                products.push({ product: product.product.toString(), quantity: product.quantity });
-            }
-        }
-    }
+    try {
+        const products = [];
+        for (const order of orders) {
+            for (const product of order.products) {
+                const productId = product.product.toString();
+                let existingProduct;
 
-    products.sort((a, b) => b.quantity - a.quantity);
-    const topProducts = products.slice(0, 5);
-
-    const labels = [];
-    const values = [];
-
-    for (const product of topProducts) {
-        const productId = product.product;
-        let existingProduct = await CellPhone.findById(productId);
-        if (!existingProduct) {
-            existingProduct = await Computer.findById(productId);
-            if (!existingProduct) {
-                existingProduct = await GConsole.findById(productId);
-                if (!existingProduct) {
+                try {
+                    existingProduct = await CellPhone.findById(productId);
+                    if (!existingProduct) {
+                        existingProduct = await Computer.findById(productId);
+                        if (!existingProduct) {
+                            existingProduct = await GConsole.findById(productId);
+                            if (!existingProduct) {
+                                return false;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log(error);
                     return false;
+                }
+
+                const existingProductIndex = products.findIndex((p) => p.product === productId);
+                if (existingProductIndex !== -1) {
+                    products[existingProductIndex].quantity += product.quantity;
+                } else {
+                    products.push({ product: productId, quantity: product.quantity });
                 }
             }
         }
-        labels.push(existingProduct.model);
-        values.push(product.quantity);
+
+        products.sort((a, b) => b.quantity - a.quantity);
+        const topProducts = products.slice(0, 5);
+
+        const labels = [];
+        const values = [];
+
+        for (const product of topProducts) {
+            try {
+                existingProduct = await CellPhone.findById(product.product);
+                if (!existingProduct) {
+                    existingProduct = await Computer.findById(product.product);
+                    if (!existingProduct) {
+                        existingProduct = await GConsole.findById(product.product);
+                        if (!existingProduct) {
+                            return false;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log(error);
+                return false;
+            }
+
+            labels.push(existingProduct.model);
+            values.push(product.quantity);
+        }
+        return { labels, values };
+    } catch (error) {
+        console.log(error);
+        return false;
     }
-    return { labels, values };
 };
 
 
