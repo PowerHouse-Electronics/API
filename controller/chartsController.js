@@ -70,8 +70,7 @@ const generateProductsData = async (orders) => {
         for (const order of orders) {
             for (const product of order.products) {
                 const productId = product.product.toString();
-                let existingProduct;
-
+                let existingProduct = null; 
                 try {
                     existingProduct = await CellPhone.findById(productId);
                     if (!existingProduct) {
@@ -79,7 +78,8 @@ const generateProductsData = async (orders) => {
                         if (!existingProduct) {
                             existingProduct = await GConsole.findById(productId);
                             if (!existingProduct) {
-                                return false;
+                                console.log("Producto no encontrado:", productId);
+                                continue;
                             }
                         }
                     }
@@ -123,6 +123,8 @@ const generateProductsData = async (orders) => {
             labels.push(existingProduct.model);
             values.push(product.quantity);
         }
+        console.log(labels, values);
+
         return { labels, values };
     } catch (error) {
         console.log(error);
@@ -165,10 +167,11 @@ const generateWeeklyRevenueData = async (orders) => {
 
 const generateChartAndSend = async (req, res) => {
     try {
-        const orders = await Order.find(); 
+        const orders = await Order.find();
         const productsData = await generateProductsData(orders);
 
         if (!productsData) {
+
             return res.status(400).json({ error: 'No se pudieron obtener los datos de los productos' });
         }
 
